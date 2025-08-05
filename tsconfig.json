@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "target": "ES6", //Biên dịch sang ES6
+        "module": "commonjs", //Hỗ trợ module của Node.js
+        "moduleResolution": "node", //Hỗ trợ import module từ node_modules
+        "esModuleInterop": true, //dùng import thay cho require
+        "resolveJsonModule": true, //Hỗ trợ import file JSON
+        "strict": true,
+    }
+}
