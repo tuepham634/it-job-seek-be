@@ -1,11 +1,29 @@
-import express, {Request, Response}from "express";
+import express from "express";
+import cors from "cors";
+import { connectDB } from "./config/database";
+import dotenv from "dotenv";
+import routers from "./routes/index.route";
 
+
+//load biến môi trường
+dotenv.config();
 const app = express();
 const port = 4000;
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello wordl!");
-});
+//kết nối db
+connectDB();
+//Cấu hình CORS
+app.use(cors({
+  origin: "http://localhost:3000", // URL của frontend  
+  methods: ["GET", "POST", "PUT", "DELETE"], // Các phương thức HTTP được phép
+  allowedHeaders: ["Content-Type", "Authorization"], // Các header được phép  
+  credentials: true // Cho phép gửi cookie
+}));
+
+// cho phé gửi dữ liệu dạng JSON
+app.use(express.json());
+
+app.use("/", routers);
 
 
 app.listen(port, () => {

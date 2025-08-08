@@ -4,7 +4,14 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "express": "^5.1.0"
+    "@types/cors": "^2.8.19",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "joi": "^18.0.0",
+    "mogoose": "^0.0.1-security",
+    "mongoose": "^8.17.1"
   },
   "scripts": {
     "start": "nodemon index.ts"
