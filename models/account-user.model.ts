@@ -1,8 +1,7 @@
-import e from "express";
 import mongoose from "mongoose";
 
 const schema = new mongoose.Schema({
-  username: String,
+  fullName: String,
   email: String,
   password: String,
 },
