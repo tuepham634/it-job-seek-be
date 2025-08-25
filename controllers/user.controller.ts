@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import AccountUser from "../models/account-user.model";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { AccountRequest } from "../interfaces/request.interface";
+
 export const registerPost = async (req: Request, res: Response) => {
   console.log(req.body);
   const { fullName, email, password } = req.body;
@@ -81,4 +83,22 @@ export const loginPost = async (req: Request, res: Response) => {
     code: "success",
     message: "Đăng nhập thành công!"
   });
+}
+
+export const profilePatch = async(req: AccountRequest, res: Response) => {
+  if(req.file){
+    req.body.avatar = req.file.path;
+  }else {
+    delete req.body.avatar;
+  }
+
+  await AccountUser.updateOne({
+    _id: req.account._id
+  }, req.body)
+  console.log(req.body);
+  console.log(req.file);
+  res.json({
+    code: "success",
+    message: "Cập nhật thông tin thành công!"
+  })
 }

@@ -14,9 +14,9 @@ const port = 4000;
 connectDB();
 //Cấu hình CORS
 app.use(cors({
-  origin: "http://localhost:3000", // URL của frontend  
-  methods: ["GET", "POST", "PUT", "DELETE"], // Các phương thức HTTP được phép
-  allowedHeaders: ["Content-Type", "Authorization"], // Các header được phép  
+  origin: "http://localhost:3000", // URL của frontend
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE","OPTIONS"], // Các phương thức HTTP được phép
+  allowedHeaders: ["Content-Type", "Authorization"], // Các header được phép
   credentials: true // Cho phép gửi cookie qua lại giưa be và fe
 }));
 
