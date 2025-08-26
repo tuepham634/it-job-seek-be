@@ -2,6 +2,8 @@ import { Response, NextFunction } from "express";
 import { AccountRequest } from "../interfaces/request.interface";
 import AccountUser from "../models/account-user.model";
 import jwt from "jsonwebtoken";
+import AccountCompany from "../models/account-company.model";
+
 export const verifyTokenUser = async (req: AccountRequest, res: Response, next: NextFunction) => {
     try {
         const token = req.cookies.token;
@@ -27,6 +29,43 @@ export const verifyTokenUser = async (req: AccountRequest, res: Response, next: 
             return;
         }
         req.account = existAccountUser;
+
+        next();
+    } catch (error) {
+        res.clearCookie("token");
+        res.json({
+            code: "error",
+            message: "Token không hợp lệ!"
+        });
+    }
+    
+};
+
+export const verifyTokenCompany = async (req: AccountRequest, res: Response, next: NextFunction) => {
+    try {
+        const token = req.cookies.token;
+        if(!token) {
+            res.json({
+                code: "error",
+                message: "Không tìm thấy token!"
+            });
+            return;
+        }
+        const decoded = jwt.verify(token,`${process.env.JWT_SECRET}`) as jwt.JwtPayload;
+        const { id, email } = decoded;
+        const existAccountCompany = await AccountCompany.findOne({
+            _id: id,
+            email: email
+        })
+
+        if(!existAccountCompany) {
+            res.json({
+                code: "error",
+                message: "Người dùng không tồn tại!"
+            });
+            return;
+        }
+        req.account = existAccountCompany;
 
         next();
     } catch (error) {

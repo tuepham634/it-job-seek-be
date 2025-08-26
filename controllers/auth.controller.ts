@@ -50,7 +50,17 @@ export const check = async (req: Request, res: Response) => {
       const infoCompany = {
         id: existAccountCompany.id,
         companyName: existAccountCompany.companyName,
-        email: existAccountCompany.email
+        email: existAccountCompany.email,
+        city: existAccountCompany.city,
+        address: existAccountCompany.address,
+        companyModel: existAccountCompany.companyModel,
+        companyEmployees: existAccountCompany.companyEmployees,
+        workingTime: existAccountCompany.workingTime,
+        workOvertime: existAccountCompany.workOvertime,
+        description: existAccountCompany.description,
+        logo: existAccountCompany.logo,
+        phone: existAccountCompany.phone,
+
       }
       res.json({
         code: "success",
