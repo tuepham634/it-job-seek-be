@@ -4,6 +4,8 @@ import City from "../models/city.model";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { AccountRequest } from "../interfaces/request.interface";
+import Job from "../models/job.model";
+import { create } from "domain";
 
 export const registerPost = async (req: Request, res: Response) => {
     const { companyName, email, password } = req.body;
@@ -107,4 +109,63 @@ export const profilePatch = async(req: AccountRequest, res: Response) => {
     code: "success",
     message: "Cập nhật thông tin thành công!"
   })
+}
+
+export const jobCreatePost = async(req: AccountRequest, res: Response) => {
+  req.body.companyId = req.account._id;
+  req.body.salaryMin = parseInt(req.body.salaryMin) || 0;
+  req.body.salaryMax = parseInt(req.body.salaryMax) || 0;
+  req.body.technologies = req.body.technologies ? req.body.technologies.split(", ") : [];
+  req.body.images = [];
+
+  //xử lý mảng hình ảnh
+  if(req.files) {
+    for(const file of req.files as any []){
+      req.body.images.push(file.path);
+    }
+  }
+  const newJob = new Job(req.body);
+  await newJob.save();
+  res.json({
+    code: "success",
+    message: "Tạo mới công việc thành công!"
+
+  })
+}
+
+
+
+export const jobList = async(req: AccountRequest, res: Response) => {
+  const jobs = await Job.find({
+    companyId: req.account._id
+  })
+  .sort({
+    createdAt: "desc"
+  })
+
+  const dataFinal = [];
+  const city = await City.findOne({
+    _id: req.account.city
+  });
+
+  for(const item of jobs) {
+    dataFinal.push({
+      id: item.id,
+      companyLogo: req.account.logo,
+      title: item.title,
+      companyName: req.account.companyName,
+      salaryMin: item.salaryMin,
+      salaryMax: item.salaryMax,
+      position: item.position,
+      workingForm: item.workingForm,
+      companyCity: city?.name,
+      technologies: item.technologies,
+
+    })
+
+  }
+  res.json({
+    code: "success",
+    jobs: dataFinal
+  });
 }
