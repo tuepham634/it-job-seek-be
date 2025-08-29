@@ -35,4 +35,16 @@ router.get(
     authMiddleware.verifyTokenCompany,
     companyController.jobList
 )
+
+router.get(
+    "/job/edit/:id",
+    authMiddleware.verifyTokenCompany,
+    companyController.jobEdit
+);
+router.patch(
+    "/job/edit/:id",
+    authMiddleware.verifyTokenCompany,
+    upload.array("images", 8),
+    companyController.jobEditPatch
+);
 export default router;

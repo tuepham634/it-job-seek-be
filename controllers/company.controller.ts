@@ -8,37 +8,37 @@ import Job from "../models/job.model";
 import { create } from "domain";
 
 export const registerPost = async (req: Request, res: Response) => {
-    const { companyName, email, password } = req.body;
+  const { companyName, email, password } = req.body;
 
-    const existCompany = await AccountCompany.findOne({
-        email: email
-    })
+  const existCompany = await AccountCompany.findOne({
+    email: email
+  })
 
-    if(existCompany){
-        res.json({
-            code: "error",
-            message: "Email đã được sử dụng!"
-        })
-
-        return
-    }
-    // Mã hóa mật khẩu
-    const salt = await bcrypt.genSalt(10); // Tạo salt với độ dài 10
-    const hashedPassword = await bcrypt.hash(password, salt); // Mã hóa mật khẩu với salt
-
-    const newCompany = new AccountCompany({
-        companyName: companyName,
-        email:email,
-        password: hashedPassword
-    })
-
-    await newCompany.save();
-
-
+  if (existCompany) {
     res.json({
-        code: "success",
-        message: "Đăng ký thành công!"
+      code: "error",
+      message: "Email đã được sử dụng!"
     })
+
+    return
+  }
+  // Mã hóa mật khẩu
+  const salt = await bcrypt.genSalt(10); // Tạo salt với độ dài 10
+  const hashedPassword = await bcrypt.hash(password, salt); // Mã hóa mật khẩu với salt
+
+  const newCompany = new AccountCompany({
+    companyName: companyName,
+    email: email,
+    password: hashedPassword
+  })
+
+  await newCompany.save();
+
+
+  res.json({
+    code: "success",
+    message: "Đăng ký thành công!"
+  })
 
 }
 
@@ -49,7 +49,7 @@ export const loginPost = async (req: Request, res: Response) => {
     email: email
   });
 
-  if(!existAccount) {
+  if (!existAccount) {
     res.json({
       code: "error",
       message: "Email không tồn tại trong hệ thống!"
@@ -58,7 +58,7 @@ export const loginPost = async (req: Request, res: Response) => {
   }
 
   const isPasswordValid = await bcrypt.compare(password, `${existAccount.password}`);
-  if(!isPasswordValid) {
+  if (!isPasswordValid) {
     res.json({
       code: "error",
       message: "Mật khẩu không đúng!"
@@ -93,13 +93,13 @@ export const loginPost = async (req: Request, res: Response) => {
 }
 
 
-export const profilePatch = async(req: AccountRequest, res: Response) => {
-  if(req.file){
+export const profilePatch = async (req: AccountRequest, res: Response) => {
+  if (req.file) {
     req.body.logo = req.file.path;
-  }else {
+  } else {
     delete req.body.logo;
   }
- 
+
   await AccountCompany.updateOne({
     _id: req.account._id
   }, req.body)
@@ -111,7 +111,7 @@ export const profilePatch = async(req: AccountRequest, res: Response) => {
   })
 }
 
-export const jobCreatePost = async(req: AccountRequest, res: Response) => {
+export const jobCreatePost = async (req: AccountRequest, res: Response) => {
   req.body.companyId = req.account._id;
   req.body.salaryMin = parseInt(req.body.salaryMin) || 0;
   req.body.salaryMax = parseInt(req.body.salaryMax) || 0;
@@ -119,8 +119,8 @@ export const jobCreatePost = async(req: AccountRequest, res: Response) => {
   req.body.images = [];
 
   //xử lý mảng hình ảnh
-  if(req.files) {
-    for(const file of req.files as any []){
+  if (req.files) {
+    for (const file of req.files as any[]) {
       req.body.images.push(file.path);
     }
   }
@@ -135,40 +135,40 @@ export const jobCreatePost = async(req: AccountRequest, res: Response) => {
 
 
 
-export const jobList = async(req: AccountRequest, res: Response) => {
+export const jobList = async (req: AccountRequest, res: Response) => {
   const find = {
     companyId: req.account._id
   }
   //Phân trang
   const LimitItems = 2;
   let page = 1
-  if(req.query.page) {
+  if (req.query.page) {
     const currentPage = parseInt(`${req.query.page}`);
-    if(currentPage > 0) {
+    if (currentPage > 0) {
       page = currentPage;
     }
   }
   const totalItems = await Job.countDocuments(find);
   const totalPage = Math.ceil(totalItems / LimitItems);
-  if(page > totalPage && totalPage != 0) {
+  if (page > totalPage && totalPage != 0) {
     page = totalPage;
   }
 
   const skip = (page - 1) * LimitItems;
 
   const jobs = await Job.find(find)
-  .sort({
-    createdAt: "desc"
-  })
-  .skip(skip)
-  .limit(LimitItems);
+    .sort({
+      createdAt: "desc"
+    })
+    .skip(skip)
+    .limit(LimitItems);
 
   const dataFinal = [];
   const city = await City.findOne({
     _id: req.account.city
   });
 
-  for(const item of jobs) {
+  for (const item of jobs) {
     dataFinal.push({
       id: item.id,
       companyLogo: req.account.logo,
@@ -189,4 +189,79 @@ export const jobList = async(req: AccountRequest, res: Response) => {
     jobs: dataFinal,
     totalPage: totalPage
   });
+}
+
+export const jobEdit = async (req: AccountRequest, res: Response) => {
+  try {
+
+    const { id } = req.params;
+    const jobDetail = await Job.findOne({
+      _id: id,
+      companyId: req.account._id
+    })
+    if (!jobDetail) {
+      res.json({
+        code: "error",
+        message: "Id không hợp lệ"
+      })
+      return;
+    }
+    res.json({
+      code: "success",
+      message: "Lấy thông tin công việc thành công!",
+      jobDetail: jobDetail
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      code: "error",
+      message: "id không hợp lệ!"
+    });
+  }
+
+}
+
+export const jobEditPatch = async (req: AccountRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const jobDetail = await Job.findOne({
+      _id: id,
+      companyId: req.account._id
+    })
+    if (!jobDetail) {
+      res.json({
+        code: "error",
+        message: "Id không hợp lệ"
+      })
+      return;
+    }
+    req.body.salaryMin = req.body.salaryMin ? parseInt(req.body.salaryMin) : 0;
+    req.body.salaryMax = req.body.salaryMax ? parseInt(req.body.salaryMax) : 0;
+    req.body.technologies = req.body.technologies ? req.body.technologies.split(", ") : [];
+    req.body.images = [];
+
+    // Xử lý mảng images
+    if (req.files) {
+      for (const file of req.files as any[]) {
+        req.body.images.push(file.path);
+      }
+    }
+
+    await Job.updateOne({
+      _id: id,
+      companyId: req.account.id
+    }, req.body)
+
+    res.json({
+      code: "success",
+      message: "Cập nhật thành công!"
+    })
+
+  } catch (error) {
+    console.log(error);
+    res.json({
+      code: "error",
+      message: "id không hợp lệ!"
+    });
+  }
 }
