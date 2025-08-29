@@ -136,12 +136,32 @@ export const jobCreatePost = async(req: AccountRequest, res: Response) => {
 
 
 export const jobList = async(req: AccountRequest, res: Response) => {
-  const jobs = await Job.find({
+  const find = {
     companyId: req.account._id
-  })
+  }
+  //Phân trang
+  const LimitItems = 2;
+  let page = 1
+  if(req.query.page) {
+    const currentPage = parseInt(`${req.query.page}`);
+    if(currentPage > 0) {
+      page = currentPage;
+    }
+  }
+  const totalItems = await Job.countDocuments(find);
+  const totalPage = Math.ceil(totalItems / LimitItems);
+  if(page > totalPage && totalPage != 0) {
+    page = totalPage;
+  }
+
+  const skip = (page - 1) * LimitItems;
+
+  const jobs = await Job.find(find)
   .sort({
     createdAt: "desc"
   })
+  .skip(skip)
+  .limit(LimitItems);
 
   const dataFinal = [];
   const city = await City.findOne({
@@ -166,6 +186,7 @@ export const jobList = async(req: AccountRequest, res: Response) => {
   }
   res.json({
     code: "success",
-    jobs: dataFinal
+    jobs: dataFinal,
+    totalPage: totalPage
   });
 }
