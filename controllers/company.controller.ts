@@ -327,7 +327,6 @@ export const companyList = async (req: Request, res: Response) => {
       companyListFinal.push(dataItemFinal);
 
   }
-  console.log(companyListFinal);
   res.json({
     code: "success",
     message: "Thành công!",
