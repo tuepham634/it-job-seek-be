@@ -5,11 +5,13 @@ import companyRoute from "./company.route";
 import cityRoute from "./city.route";
 import uploadRoute from "./upload.route";
 import searchRoute from "./search.route";
+import jobRoute from "./job.route";
 const router = Router();
 
 router.use("/user", userRoute);
 router.use("/company", companyRoute);
 router.use('/auth', authRoutes);
+router.use('/job', jobRoute);
 router.use('/city', cityRoute);
 router.use('/upload', uploadRoute);
 router.use('/search', searchRoute);
