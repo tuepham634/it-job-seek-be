@@ -298,10 +298,13 @@ export const deleteJobDel = async (req: AccountRequest, res: Response) => {
 }
 
 export const companyList = async (req: Request, res: Response) => {
+  // console.log("query: ",req.query);
   let limitItems = 12;
   if (req.query.limitItems) {
     limitItems = parseInt(`${req.query.limitItems}`);
   }
+  // console.log("limitItems query:", req.query.limitItems, "parsed:", parseInt(`${req.query.limitItems}`));
+
    // Phân trang
   let page = 1;
   if(req.query.page) {
@@ -344,10 +347,87 @@ export const companyList = async (req: Request, res: Response) => {
       companyListFinal.push(dataItemFinal);
 
   }
+  console.log("Danh sách công ty: ",companyListFinal);
+  console.log("Tổng số trang: ",totalPage);
   res.json({
     code: "success",
     message: "Thành công!",
     companyList: companyListFinal,
     totalPage: totalPage
   });
+}
+
+export const detail = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    
+    const record = await AccountCompany.findOne({
+      _id: id
+    })
+
+    if(!record) {
+      res.json({
+        code: "error",
+        message: "Id không hợp lệ!"
+      })
+      return;
+    }
+
+    // Thông tin công ty
+    const companyDetail = {
+      id: record.id,
+      logo: record.logo,
+      companyName: record.companyName,
+      address: record.address,
+      companyModel: record.companyModel,
+      companyEmployees: record.companyEmployees,
+      workingTime: record.workingTime,
+      workOvertime: record.workOvertime,
+      description: record.description,
+    };
+
+    // Danh sách việc làm
+    const jobList = await Job
+      .find({
+        companyId: record.id
+      })
+      .sort({
+        createdAt: "desc"
+      })
+
+    const dataFinal = [];
+
+    const city = await City.findOne({
+    _id: record.city
+  })
+
+    for (const item of jobList) {
+      dataFinal.push({
+        id: item.id,
+        companyLogo: record.logo,
+        title: item.title,
+        companyName: record.companyName,
+        salaryMin: item.salaryMin,
+        salaryMax: item.salaryMax,
+        position: item.position,
+        workingForm: item.workingForm,
+        companyCity: city?.name,
+        technologies: item.technologies,
+      });
+    }
+
+    res.json({
+      code: "success",
+      message: "Thành công!",
+      companyDetail: companyDetail,
+      jobList: dataFinal
+    })
+  } catch (error) {
+    console.log(error);
+    res.json({
+      code: "error",
+      message: "Id không hợp lệ!"
+    })
+  }
+
 }

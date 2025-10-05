@@ -58,4 +58,9 @@ router.get(
     "/list",
     companyController.companyList
 )
+router.get(
+  '/detail/:id', 
+  companyController.detail
+);
+
 export default router;
