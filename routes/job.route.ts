@@ -8,7 +8,7 @@ const  upload  =  multer ({
     fileSize :  5  *  1024  *  1024  // 5MB
   },
   fileFilter :  ( req ,  file ,  cb )  =>  {
-    if ( file . mimetype  !==  ' application/pdf ' )  {
+    if ( file . mimetype  !==  'application/pdf' )  {
       cb ( null ,  false );
       return ;
     }
