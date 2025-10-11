@@ -136,11 +136,18 @@ export const jobCreatePost = async (req: AccountRequest, res: Response) => {
 
 
 export const jobList = async (req: AccountRequest, res: Response) => {
-  const find = {
+  const find: any = {
     companyId: req.account._id
   }
+  if (req.query.position && req.query.position !== "") {
+    find.position = req.query.position;
+  }
+
+  if (req.query.workingForm && req.query.workingForm !== "") {
+    find.workingForm = req.query.workingForm;
+  }
   //Phân trang
-  const LimitItems = 2;
+  const LimitItems = 3;
   let page = 1
   if (req.query.page) {
     const currentPage = parseInt(`${req.query.page}`);
@@ -298,82 +305,81 @@ export const deleteJobDel = async (req: AccountRequest, res: Response) => {
 }
 
 export const companyList = async (req: Request, res: Response) => {
-  // console.log("query: ",req.query);
-  let limitItems = 12;
+  const totalRecord = await AccountCompany.countDocuments({});
+  let limitItems = totalRecord;
   if (req.query.limitItems) {
     limitItems = parseInt(`${req.query.limitItems}`);
   }
-  // console.log("limitItems query:", req.query.limitItems, "parsed:", parseInt(`${req.query.limitItems}`));
 
-   // Phân trang
+  // Phân trang
   let page = 1;
-  if(req.query.page) {
+  if (req.query.page) {
     const currentPage = parseInt(`${req.query.page}`);
-    if(currentPage > 0) {
+    if (currentPage > 0) {
       page = currentPage;
     }
   }
-  const totalRecord = await AccountCompany.countDocuments({});
-  const totalPage = Math.ceil(totalRecord/limitItems);
-  if(page > totalPage && totalPage != 0) {
+
+
+  const totalPage = Math.ceil(totalRecord / limitItems);
+  if (page > totalPage && totalPage != 0) {
     page = totalPage;
   }
   const skip = (page - 1) * limitItems;
-  // Hết Phân trang
 
-  const companyList = await AccountCompany
-  .find({})
-  .sort({ createdAt: "desc" })
-  .limit(limitItems)
-  .skip(skip)
-  const companyListFinal = [];
+  // Lấy tất cả công ty (chưa phân trang) để tính totalJob
+  const companyList = await AccountCompany.find({});
+
+  const companyListFinal: any[] = [];
 
   for (const item of companyList) {
-     const dataItemFinal = {
-        id: item.id,
-        logo: item.logo,
-        companyName: item.companyName,
-        cityName: "",
-        totalJob: 0
-      };
-      const city = await City.findOne({
-        _id: item.city
-      })
-      dataItemFinal.cityName = `${city?.name}`;
-      const totalJob = await Job.countDocuments({
-        companyId: item._id
-      });
-      dataItemFinal.totalJob = totalJob;
-      companyListFinal.push(dataItemFinal);
+    const totalJob = await Job.countDocuments({
+      companyId: item._id
+    });
 
+    const city = await City.findOne({
+      _id: item.city
+    });
+
+    companyListFinal.push({
+      id: item.id,
+      logo: item.logo,
+      companyName: item.companyName,
+      cityName: city?.name || "",
+      totalJob
+    });
   }
-  console.log("Danh sách công ty: ",companyListFinal);
-  console.log("Tổng số trang: ",totalPage);
+
+  // Sort theo totalJob giảm dần
+  companyListFinal.sort((a, b) => b.totalJob - a.totalJob);
+
+  //Phân trang sau khi sort
+  const paginatedList = companyListFinal.slice(skip, skip + limitItems);
+  // console.log("danh sách công ty: ",companyListFinal)
   res.json({
     code: "success",
     message: "Thành công!",
-    companyList: companyListFinal,
+    companyList: paginatedList,
+    companyListFinal: companyListFinal,
     totalPage: totalPage
   });
-}
+};
 
-export const detail = async (req: Request, res: Response) => {
+
+export const detail = async (req:Request, res:Response) => {
   try {
-    const id = req.params.id;
-    
-    const record = await AccountCompany.findOne({
-      _id: id
-    })
+    const id = req.params.id; // slug = id
+    const page = parseInt(`${req.query.page}`) || 1;
+    const limit = parseInt(`${req.query.limit}`) || 6;
+    const skip = (page - 1) * limit;
 
-    if(!record) {
-      res.json({
-        code: "error",
-        message: "Id không hợp lệ!"
-      })
+    const record = await AccountCompany.findOne({ _id: id });
+
+    if (!record) {
+      res.json({ code: "error", message: "Id không hợp lệ!" });
       return;
     }
 
-    // Thông tin công ty
     const companyDetail = {
       id: record.id,
       logo: record.logo,
@@ -386,51 +392,46 @@ export const detail = async (req: Request, res: Response) => {
       description: record.description,
     };
 
-    // Danh sách việc làm
-    const jobList = await Job
-      .find({
-        companyId: record.id
-      })
-      .sort({
-        createdAt: "desc"
-      })
+    const totalJobs = await Job.countDocuments({ companyId: record.id });
 
-    const dataFinal = [];
+    const jobList = await Job.find({ companyId: record.id })
+      .sort({ createdAt: "desc" })
+      .skip(skip)
+      .limit(limit);
 
-    const city = await City.findOne({
-    _id: record.city
-  })
+    const city = await City.findOne({ _id: record.city });
 
-    for (const item of jobList) {
-      dataFinal.push({
-        id: item.id,
-        companyLogo: record.logo,
-        title: item.title,
-        companyName: record.companyName,
-        salaryMin: item.salaryMin,
-        salaryMax: item.salaryMax,
-        position: item.position,
-        workingForm: item.workingForm,
-        companyCity: city?.name,
-        technologies: item.technologies,
-      });
-    }
+    const dataFinal = jobList.map((item) => ({
+      id: item.id,
+      companyLogo: record.logo,
+      title: item.title,
+      companyName: record.companyName,
+      salaryMin: item.salaryMin,
+      salaryMax: item.salaryMax,
+      position: item.position,
+      workingForm: item.workingForm,
+      companyCity: city?.name,
+      technologies: item.technologies,
+    }));
 
     res.json({
       code: "success",
       message: "Thành công!",
-      companyDetail: companyDetail,
-      jobList: dataFinal
-    })
+      companyDetail,
+      jobList: dataFinal,
+      pagination: {
+        page,
+        limit,
+        total: totalJobs,
+        totalPages: Math.ceil(totalJobs / limit),
+      },
+    });
   } catch (error) {
-    console.log(error);
-    res.json({
-      code: "error",
-      message: "Id không hợp lệ!"
-    })
+    console.error(error);
+    res.json({ code: "error", message: "Lỗi server!" });
   }
+};
 
-}
 export const listCV = async (req: AccountRequest, res: Response) => {
 const companyId = req.account.id;
 

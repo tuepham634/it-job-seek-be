@@ -3,6 +3,9 @@ import AccountUser from "../models/account-user.model";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { AccountRequest } from "../interfaces/request.interface";
+import Job from "../models/job.model";
+import AccountCompany from "../models/account-company.model";
+import CV from "../models/cv.model";
 
 export const registerPost = async (req: Request, res: Response) => {
   console.log(req.body);
@@ -102,3 +105,111 @@ export const profilePatch = async(req: AccountRequest, res: Response) => {
     message: "Cập nhật thông tin thành công!"
   })
 }
+
+export const listCV = async (req: AccountRequest, res: Response) => {
+  const userEmail = req.account.email;
+  //Phân trang
+  const LimitItems = 3;
+  let page = 1
+  if (req.query.page) {
+    const currentPage = parseInt(`${req.query.page}`);
+    if (currentPage > 0) {
+      page = currentPage;
+    }
+  }
+  const totalItems = await CV.countDocuments({ email: userEmail });
+  const totalPage = Math.ceil(totalItems / LimitItems);
+  if (page > totalPage && totalPage != 0) {
+    page = totalPage;
+  }
+  
+
+  const skip = (page - 1) * LimitItems;
+  const listCV = await CV
+    .find({
+      email: userEmail
+    })
+    .sort({
+      createdAt: "desc"
+    })
+    .skip(skip)
+    .limit(LimitItems);
+
+  const dataFinal = [];
+
+  for (const item of listCV) {
+    const dataItemFinal = {
+      id: item.id,
+      jobId: item.jobId,
+      fullName: item.fullName,
+      email: item.email,
+      phone: item.phone,
+      fileUrl: item.fileCV,
+      jobTitle: "",
+      companyName: "",
+      jobSalaryMin: 0,
+      jobSalaryMax: 0,
+      jobPosition: "",
+      jobWorkingForm: "",
+      jobTech: "",
+      status: item.status,
+    };
+
+    const infoJob = await Job.findOne({
+      _id: item.jobId
+    })
+
+    if(infoJob) {
+      dataItemFinal.jobTitle = `${infoJob.title}`;
+      dataItemFinal.jobSalaryMin = parseInt(`${infoJob.salaryMin}`);
+      dataItemFinal.jobSalaryMax = parseInt(`${infoJob.salaryMax}`);
+      dataItemFinal.jobPosition = `${infoJob.position}`;
+      dataItemFinal.jobWorkingForm = `${infoJob.workingForm}`;
+      dataItemFinal.jobTech = `${infoJob.technologies.join(", ")}`;
+
+      const infoCompany = await AccountCompany.findOne({
+        _id: infoJob.companyId
+      })
+
+      if(infoCompany) {
+        dataItemFinal.companyName = `${infoCompany.companyName}`;
+        dataFinal.push(dataItemFinal);
+      }
+    }
+  }
+
+  res.json({
+    code: "success",
+    message: "Lấy danh sách CV thành công!",
+    listCV: dataFinal,
+    totalPage: totalPage
+  })
+}
+export const deleteCVDel = async (req: AccountRequest, res: Response) => {
+  try {
+    const userEmail = req.account.email;
+    const cvId = req.params.id;
+
+    const infoCV = await CV.findOne({ _id: cvId, email: userEmail });
+
+    if (!infoCV) {
+      return res.json({
+        code: "error",
+        message: "CV không tồn tại hoặc không thuộc quyền của bạn!",
+      });
+    }
+
+    await CV.deleteOne({ _id: cvId });
+
+    res.json({
+      code: "success",
+      message: "Đã xóa!",
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      code: "error",
+      message: "Có lỗi xảy ra khi xóa CV!",
+    });
+  }
+};

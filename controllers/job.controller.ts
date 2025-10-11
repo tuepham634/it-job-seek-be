@@ -52,7 +52,7 @@ export const detail = async (req: Request, res: Response) => {
       jobDetail.companyWorkingTime = `${companyInfo.workingTime}`;
       jobDetail.companyWorkOvertime = `${companyInfo.workOvertime}`;
     }
-
+    console.log("Data công ty: ", jobDetail);
     res.json({
       code: "success",
       message: "Thành công!",
