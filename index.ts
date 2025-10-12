@@ -13,6 +13,7 @@ const port = 4000;
 //kết nối db
 connectDB();
 //Cấu hình CORS
+app.set("trust proxy", 1);
 app.use(cors({
   origin: [
       "http://localhost:3000", // URL của frontend
