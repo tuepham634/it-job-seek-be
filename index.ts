@@ -16,7 +16,7 @@ connectDB();
 app.use(cors({
   origin: [
       "http://localhost:3000", // URL của frontend
-      "https://project-2-fe.vercel.app"
+      "https://it-job-seek.vercel.app"
   ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE","OPTIONS"], // Các phương thức HTTP được phép
   allowedHeaders: ["Content-Type", "Authorization"], // Các header được phép
