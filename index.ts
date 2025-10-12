@@ -14,7 +14,10 @@ const port = 4000;
 connectDB();
 //Cấu hình CORS
 app.use(cors({
-  origin: "http://localhost:3000", // URL của frontend
+  origin: [
+      "http://localhost:3000", // URL của frontend
+      "https://project-2-fe.vercel.app"
+  ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE","OPTIONS"], // Các phương thức HTTP được phép
   allowedHeaders: ["Content-Type", "Authorization"], // Các header được phép
   credentials: true // Cho phép gửi cookie qua lại giưa be và fe
