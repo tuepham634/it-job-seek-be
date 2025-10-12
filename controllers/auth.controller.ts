@@ -71,14 +71,22 @@ export const check = async (req: Request, res: Response) => {
     }
     // Không tìm thấy user hay company
     if(!existAccountUser && !existAccountCompany) {
-      res.clearCookie("token")
+      res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production" ? true : false, // false: http, true: https
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax" // Cho phép gửi cookie giữa các domain
+      });
       res.json({
         code: "error",
         message: "Token không hợp lệ!"
       });
     }
   } catch (error) {
-    res.clearCookie("token");
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" ? true : false, // false: http, true: https
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax" // Cho phép gửi cookie giữa các domain
+    });
     res.json({
       code: "error",
       message: "Token không hợp lệ!"
@@ -90,7 +98,11 @@ export const check = async (req: Request, res: Response) => {
 // Logout
 
 export const logout = async (req: Request, res: Response) => {
-  res.clearCookie("token");
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" ? true : false, // false: http, true: https
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax" // Cho phép gửi cookie giữa các domain
+    });
   res.json({
     code: "success",
     message: "Đã Đăng xuất!"
