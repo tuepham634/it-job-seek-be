@@ -79,7 +79,7 @@ export const loginPost = async (req: Request, res: Response) => {
     httpOnly: true, 
     secure: process.env.NODE_ENV === "production" ? true : false, // false: http, true: https
     maxAge: 24 * 60 * 60 * 1000, // 1 ngày
-    sameSite:"none", // Cho phép gửi cookie giữa các domain
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cho phép gửi cookie giữa các domain
     path: "/",
   });
 
@@ -111,7 +111,7 @@ export const profilePatch = async(req: AccountRequest, res: Response) => {
 export const listCV = async (req: AccountRequest, res: Response) => {
   const userEmail = req.account.email;
   //Phân trang
-  const LimitItems = 3;
+  const LimitItems = 6;
   let page = 1
   if (req.query.page) {
     const currentPage = parseInt(`${req.query.page}`);

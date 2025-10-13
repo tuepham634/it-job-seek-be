@@ -435,26 +435,38 @@ export const detail = async (req:Request, res:Response) => {
 };
 
 export const listCV = async (req: AccountRequest, res: Response) => {
-const companyId = req.account.id;
+  const companyId = req.account.id;
 
-  const listJob = await Job.find({
-    companyId: companyId
-  });
-
+  // Lấy tất cả job của công ty
+  const listJob = await Job.find({ companyId });
   const listJobId = listJob.map(item => item.id);
 
-  const listCV = await CV
-    .find({
-      jobId: { $in: listJobId }
-    })
-    .sort({
-      createdAt: "desc"
-    })
+  // Phân trang
+  const LimitItems = 6; // số CV trên 1 trang
+  let page = 1;
+  if (req.query.page) {
+    const currentPage = parseInt(`${req.query.page}`);
+    if (currentPage > 0) page = currentPage;
+  }
+
+  // Tổng số CV và tổng trang
+  const totalItems = await CV.countDocuments({ jobId: { $in: listJobId } });
+  const totalPage = Math.ceil(totalItems / LimitItems);
+
+  if (page > totalPage && totalPage !== 0) page = totalPage;
+
+  const skip = (page - 1) * LimitItems;
+
+  // Lấy CV theo phân trang
+  const listCV = await CV.find({ jobId: { $in: listJobId } })
+    .sort({ createdAt: "desc" })
+    .skip(skip)
+    .limit(LimitItems);
 
   const dataFinal = [];
 
   for (const item of listCV) {
-    const dataItemFinal = {
+    const dataItemFinal: any = {
       id: item.id,
       jobTitle: "",
       fullName: item.fullName,
@@ -468,29 +480,28 @@ const companyId = req.account.id;
       status: item.status,
     };
 
-    const infoJob = await Job.findOne({
-      _id: item.jobId
-    })
-
-    if(infoJob) {
-      dataItemFinal.jobTitle = `${infoJob.title}`;
+    const infoJob = await Job.findOne({ _id: item.jobId });
+    if (infoJob) {
+      dataItemFinal.jobTitle = infoJob.title;
       dataItemFinal.jobSalaryMin = parseInt(`${infoJob.salaryMin}`);
       dataItemFinal.jobSalaryMax = parseInt(`${infoJob.salaryMax}`);
-      dataItemFinal.jobPosition = `${infoJob.position}`;
-      dataItemFinal.jobWorkingForm = `${infoJob.workingForm}`;
+      dataItemFinal.jobPosition = infoJob.position;
+      dataItemFinal.jobWorkingForm = infoJob.workingForm;
     }
 
     dataFinal.push(dataItemFinal);
   }
-  console.log("CV: ", dataFinal);
-
+  console.log("Danh sách CV: ", dataFinal);
+  console.log("Tổng số trang: ", totalPage);
   res.json({
     code: "success",
     message: "Lấy danh sách CV thành công!",
-    listCV: dataFinal
-  })
+    listCV: dataFinal,
+    totalPage,
+    totalRecord: totalItems,
+  });
+};
 
-}
 export const detailCV = async (req: AccountRequest, res: Response) => {
   try {
     const companyId = req.account.id;

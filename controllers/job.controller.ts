@@ -52,7 +52,7 @@ export const detail = async (req: Request, res: Response) => {
       jobDetail.companyWorkingTime = `${companyInfo.workingTime}`;
       jobDetail.companyWorkOvertime = `${companyInfo.workOvertime}`;
     }
-    console.log("Data công ty: ", jobDetail);
+    // console.log("Data công ty: ", jobDetail);
     res.json({
       code: "success",
       message: "Thành công!",
@@ -69,7 +69,7 @@ export const detail = async (req: Request, res: Response) => {
 
 export const applyPost = async (req: Request, res: Response) => {
  req.body.fileCV = req.file ? req.file.path : "";
-
+  // console.log("Body: ", req.body);
   const newRecord = new CV(req.body);
   await newRecord.save();
 
