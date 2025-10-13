@@ -79,12 +79,14 @@ export const loginPost = async (req: Request, res: Response) => {
     httpOnly: true, 
     secure: process.env.NODE_ENV === "production" ? true : false, // false: http, true: https
     maxAge: 24 * 60 * 60 * 1000, // 1 ngày
-    sameSite:"none" // Cho phép gửi cookie giữa các domain
+    sameSite:"none", // Cho phép gửi cookie giữa các domain
+    path: "/",
   });
 
   res.json({
     code: "success",
-    message: "Đăng nhập thành công!"
+    message: "Đăng nhập thành công!",
+    token: token
   });
 }
 

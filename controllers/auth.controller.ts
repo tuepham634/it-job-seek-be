@@ -74,7 +74,8 @@ export const check = async (req: Request, res: Response) => {
       res.clearCookie("token", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production" ? true : false, // false: http, true: https
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax" // Cho phép gửi cookie giữa các domain
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cho phép gửi cookie giữa các domain
+        path: "/",
       });
       res.json({
         code: "error",
@@ -85,7 +86,8 @@ export const check = async (req: Request, res: Response) => {
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production" ? true : false, // false: http, true: https
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax" // Cho phép gửi cookie giữa các domain
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cho phép gửi cookie giữa các domain
+      path: "/",
     });
     res.json({
       code: "error",
