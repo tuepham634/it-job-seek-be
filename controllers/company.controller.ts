@@ -149,7 +149,7 @@ export const jobList = async (req: AccountRequest, res: Response) => {
     find.workingForm = req.query.workingForm;
   }
   //Phân trang
-  const LimitItems = 3;
+  const LimitItems = 6;
   let page = 1
   if (req.query.page) {
     const currentPage = parseInt(`${req.query.page}`);
