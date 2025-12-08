@@ -316,7 +316,7 @@ export const companyList = async (req: Request, res: Response) => {
   // Check cache
   const cachedData = await redisClient.get<string>(redisKey);
   if (cachedData) {
-    res.json(JSON.parse(cachedData));
+    res.json(cachedData);
     return;
   }
 
@@ -386,7 +386,7 @@ export const detail = async (req:Request, res:Response) => {
     // Check cache
     const cachedData = await redisClient.get<string>(redisKey);
     if (cachedData) {
-      res.json(JSON.parse(cachedData));
+      res.json(cachedData);
       return;
     }
 
@@ -474,7 +474,7 @@ export const listCV = async (req: AccountRequest, res: Response) => {
   // Check cache
   const cachedData = await redisClient.get<string>(redisKey);
   if (cachedData) {
-    res.json(JSON.parse(cachedData));
+    res.json(cachedData);
     return;
   }
 

@@ -12,7 +12,7 @@ export const detail = async (req: Request, res: Response) => {
 
     const cachedData = await redisClient.get<string>(redisKey);
     if (cachedData) {
-       res.json(JSON.parse(cachedData));
+       res.json(cachedData);
        return;
     }
 
