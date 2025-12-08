@@ -126,7 +126,7 @@ export const listCV = async (req: AccountRequest, res: Response) => {
   const redisKey = `user:${userId}:cv:list:${page}`;
   
   // Check cache
-  const cachedData = await redisClient.get(redisKey);
+  const cachedData = await redisClient.get<string>(redisKey);
   if (cachedData) {
     res.json(JSON.parse(cachedData));
     return;
@@ -202,7 +202,7 @@ export const listCV = async (req: AccountRequest, res: Response) => {
 
   // Cache for 2 minutes (user data changes more frequently)
   await redisClient.set(redisKey, JSON.stringify(responseData), {
-    EX: 120
+    ex: 120
   });
 
   res.json(responseData);

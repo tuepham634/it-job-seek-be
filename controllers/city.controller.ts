@@ -6,7 +6,7 @@ export const list = async(req: Request, res: Response) => {
     const redisKey = "cities:list";
     
     // Check cache
-    const cachedData = await redisClient.get(redisKey);
+    const cachedData = await redisClient.get<string>(redisKey);
     if (cachedData) {
       res.json(JSON.parse(cachedData));
       return;
@@ -22,7 +22,7 @@ export const list = async(req: Request, res: Response) => {
 
     // Cache for 1 hour (cities rarely change)
     await redisClient.set(redisKey, JSON.stringify(responseData), {
-      EX: 3600
+      ex: 3600
     });
 
     res.json(responseData);

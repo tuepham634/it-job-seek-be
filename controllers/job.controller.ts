@@ -10,7 +10,7 @@ export const detail = async (req: Request, res: Response) => {
     const id = req.params.id;
     const redisKey = `jobs:detail:${id}`;
 
-    const cachedData = await redisClient.get(redisKey);
+    const cachedData = await redisClient.get<string>(redisKey);
     if (cachedData) {
        res.json(JSON.parse(cachedData));
        return;
@@ -70,7 +70,7 @@ export const detail = async (req: Request, res: Response) => {
     };
 
     await redisClient.set(redisKey, JSON.stringify(responseData), {
-      EX: 600
+      ex: 600
     });
 
     // console.log("Data công ty: ", jobDetail);

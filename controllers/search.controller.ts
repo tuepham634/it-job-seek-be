@@ -11,7 +11,7 @@ export const search = async (req: Request, res: Response) => {
     const redisKey = `search:${queryParams}`;
 
     // Check cache
-    const cachedData = await redisClient.get(redisKey);
+    const cachedData = await redisClient.get<string>(redisKey);
     if (cachedData) {
       res.json(JSON.parse(cachedData));
       return;
@@ -147,7 +147,7 @@ export const search = async (req: Request, res: Response) => {
 
     // Cache for 3 minutes (search results change more frequently)
     await redisClient.set(redisKey, JSON.stringify(responseData), {
-      EX: 180
+      ex: 180
     });
 
     res.json(responseData);

@@ -314,7 +314,7 @@ export const companyList = async (req: Request, res: Response) => {
   const redisKey = `companies:list:${page}:${limitItems}`;
   
   // Check cache
-  const cachedData = await redisClient.get(redisKey);
+  const cachedData = await redisClient.get<string>(redisKey);
   if (cachedData) {
     res.json(JSON.parse(cachedData));
     return;
@@ -369,7 +369,7 @@ export const companyList = async (req: Request, res: Response) => {
 
   // Cache for 5 minutes
   await redisClient.set(redisKey, JSON.stringify(responseData), {
-    EX: 300
+    ex: 300
   });
 
   res.json(responseData);
@@ -384,7 +384,7 @@ export const detail = async (req:Request, res:Response) => {
     const redisKey = `companies:detail:${id}:${page}:${limit}`;
 
     // Check cache
-    const cachedData = await redisClient.get(redisKey);
+    const cachedData = await redisClient.get<string>(redisKey);
     if (cachedData) {
       res.json(JSON.parse(cachedData));
       return;
@@ -448,7 +448,7 @@ export const detail = async (req:Request, res:Response) => {
 
     // Cache for 10 minutes
     await redisClient.set(redisKey, JSON.stringify(responseData), {
-      EX: 600
+      ex: 600
     });
 
     res.json(responseData);
@@ -472,7 +472,7 @@ export const listCV = async (req: AccountRequest, res: Response) => {
   const redisKey = `company:${companyId}:cv:list:${page}`;
 
   // Check cache
-  const cachedData = await redisClient.get(redisKey);
+  const cachedData = await redisClient.get<string>(redisKey);
   if (cachedData) {
     res.json(JSON.parse(cachedData));
     return;
@@ -535,7 +535,7 @@ export const listCV = async (req: AccountRequest, res: Response) => {
 
   // Cache for 2 minutes (company data changes frequently)
   await redisClient.set(redisKey, JSON.stringify(responseData), {
-    EX: 120
+    ex: 120
   });
 
   res.json(responseData);
