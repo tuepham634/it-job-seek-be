@@ -1,11 +1,14 @@
 import { createClient } from "redis";
 
+const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+const isUpstash = redisUrl.includes("upstash.io");
+
 export const redisClient = createClient({
-    url: process.env.REDIS_URL || "redis://localhost:6379",
-    socket: {
+    url: redisUrl,
+    socket: isUpstash ? {
         tls: true,
         rejectUnauthorized: false
-    }
+    } : undefined
 });
 
 redisClient.on("error", (err) => console.log("Redis Client Error", err));
