@@ -1,22 +1,16 @@
-import { createClient } from "redis";
+import { Redis } from "@upstash/redis";
 
-const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
-const isUpstash = redisUrl.includes("upstash.io");
-
-export const redisClient = createClient({
-    url: redisUrl,
-    socket: isUpstash ? {
-        tls: true,
-        rejectUnauthorized: false
-    } : undefined
+// Upstash REST client - works better on serverless/Render
+export const redisClient = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL || "",
+    token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
 });
-
-redisClient.on("error", (err) => console.log("Redis Client Error", err));
-redisClient.on("connect", () => console.log("Redis Connected!"));
 
 export const connectRedis = async () => {
     try {
-        await redisClient.connect();
+        // Test connection with a simple ping
+        await redisClient.ping();
+        console.log("Redis Connected!");
     } catch (error) {
         console.log("Redis Connection Failed:", error);
     }
