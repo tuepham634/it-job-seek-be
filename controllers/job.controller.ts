@@ -3,9 +3,18 @@ import Job from "../models/job.model";
 import CV from "../models/cv.model";
 import AccountCompany from "../models/account-company.model";
 
+import { redisClient } from "../helpers/redis";
+
 export const detail = async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
+    const redisKey = `jobs:detail:${id}`;
+
+    const cachedData = await redisClient.get(redisKey);
+    if (cachedData) {
+       res.json(JSON.parse(cachedData));
+       return;
+    }
 
     const record = await Job.findOne({
       _id: id
@@ -19,7 +28,7 @@ export const detail = async (req: Request, res: Response) => {
       return;
     }
 
-    const jobDetail = {
+    const jobDetail: any = {
       id: record.id,
       title: record.title,
       companyName: "",
@@ -52,12 +61,20 @@ export const detail = async (req: Request, res: Response) => {
       jobDetail.companyWorkingTime = `${companyInfo.workingTime}`;
       jobDetail.companyWorkOvertime = `${companyInfo.workOvertime}`;
     }
-    // console.log("Data công ty: ", jobDetail);
-    res.json({
+    
+    // Cache for 10 minutes
+    const responseData = {
       code: "success",
       message: "Thành công!",
       jobDetail: jobDetail
-    })
+    };
+
+    await redisClient.set(redisKey, JSON.stringify(responseData), {
+      EX: 600
+    });
+
+    // console.log("Data công ty: ", jobDetail);
+    res.json(responseData);
   } catch (error) {
     console.log(error);
     res.json({

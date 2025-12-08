@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import { AccountRequest } from "../interfaces/request.interface";
 import Job from "../models/job.model";
 import CV from "../models/cv.model";
+import { redisClient } from "../helpers/redis";
 
 export const registerPost = async (req: Request, res: Response) => {
   const { companyName, email, password } = req.body;
@@ -307,27 +308,27 @@ export const deleteJobDel = async (req: AccountRequest, res: Response) => {
 }
 
 export const companyList = async (req: Request, res: Response) => {
+  const limitItems = req.query.limitItems ? parseInt(`${req.query.limitItems}`) : 0;
+  const page = req.query.page ? parseInt(`${req.query.page}`) : 1;
+  
+  const redisKey = `companies:list:${page}:${limitItems}`;
+  
+  // Check cache
+  const cachedData = await redisClient.get(redisKey);
+  if (cachedData) {
+    res.json(JSON.parse(cachedData));
+    return;
+  }
+
   const totalRecord = await AccountCompany.countDocuments({});
-  let limitItems = totalRecord;
-  if (req.query.limitItems) {
-    limitItems = parseInt(`${req.query.limitItems}`);
-  }
+  let actualLimitItems = limitItems || totalRecord;
 
-  // Phân trang
-  let page = 1;
-  if (req.query.page) {
-    const currentPage = parseInt(`${req.query.page}`);
-    if (currentPage > 0) {
-      page = currentPage;
-    }
+  const totalPage = Math.ceil(totalRecord / actualLimitItems);
+  let actualPage = page;
+  if (actualPage > totalPage && totalPage != 0) {
+    actualPage = totalPage;
   }
-
-
-  const totalPage = Math.ceil(totalRecord / limitItems);
-  if (page > totalPage && totalPage != 0) {
-    page = totalPage;
-  }
-  const skip = (page - 1) * limitItems;
+  const skip = (actualPage - 1) * actualLimitItems;
 
   // Lấy tất cả công ty (chưa phân trang) để tính totalJob
   const companyList = await AccountCompany.find({});
@@ -356,15 +357,22 @@ export const companyList = async (req: Request, res: Response) => {
   companyListFinal.sort((a, b) => b.totalJob - a.totalJob);
 
   //Phân trang sau khi sort
-  const paginatedList = companyListFinal.slice(skip, skip + limitItems);
-  // console.log("danh sách công ty: ",companyListFinal)
-  res.json({
+  const paginatedList = companyListFinal.slice(skip, skip + actualLimitItems);
+  
+  const responseData = {
     code: "success",
     message: "Thành công!",
     companyList: paginatedList,
     companyListFinal: companyListFinal,
     totalPage: totalPage
+  };
+
+  // Cache for 5 minutes
+  await redisClient.set(redisKey, JSON.stringify(responseData), {
+    EX: 300
   });
+
+  res.json(responseData);
 };
 
 
@@ -373,6 +381,15 @@ export const detail = async (req:Request, res:Response) => {
     const id = req.params.id; // slug = id
     const page = parseInt(`${req.query.page}`) || 1;
     const limit = parseInt(`${req.query.limit}`) || 6;
+    const redisKey = `companies:detail:${id}:${page}:${limit}`;
+
+    // Check cache
+    const cachedData = await redisClient.get(redisKey);
+    if (cachedData) {
+      res.json(JSON.parse(cachedData));
+      return;
+    }
+
     const skip = (page - 1) * limit;
 
     const record = await AccountCompany.findOne({ _id: id });
@@ -416,7 +433,7 @@ export const detail = async (req:Request, res:Response) => {
       technologies: item.technologies,
     }));
 
-    res.json({
+    const responseData = {
       code: "success",
       message: "Thành công!",
       companyDetail,
@@ -427,7 +444,14 @@ export const detail = async (req:Request, res:Response) => {
         total: totalJobs,
         totalPages: Math.ceil(totalJobs / limit),
       },
+    };
+
+    // Cache for 10 minutes
+    await redisClient.set(redisKey, JSON.stringify(responseData), {
+      EX: 600
     });
+
+    res.json(responseData);
   } catch (error) {
     console.error(error);
     res.json({ code: "error", message: "Lỗi server!" });
@@ -437,10 +461,6 @@ export const detail = async (req:Request, res:Response) => {
 export const listCV = async (req: AccountRequest, res: Response) => {
   const companyId = req.account.id;
 
-  // Lấy tất cả job của công ty
-  const listJob = await Job.find({ companyId });
-  const listJobId = listJob.map(item => item.id);
-
   // Phân trang
   const LimitItems = 6; // số CV trên 1 trang
   let page = 1;
@@ -448,6 +468,19 @@ export const listCV = async (req: AccountRequest, res: Response) => {
     const currentPage = parseInt(`${req.query.page}`);
     if (currentPage > 0) page = currentPage;
   }
+
+  const redisKey = `company:${companyId}:cv:list:${page}`;
+
+  // Check cache
+  const cachedData = await redisClient.get(redisKey);
+  if (cachedData) {
+    res.json(JSON.parse(cachedData));
+    return;
+  }
+
+  // Lấy tất cả job của công ty
+  const listJob = await Job.find({ companyId });
+  const listJobId = listJob.map(item => item.id);
 
   // Tổng số CV và tổng trang
   const totalItems = await CV.countDocuments({ jobId: { $in: listJobId } });
@@ -491,15 +524,21 @@ export const listCV = async (req: AccountRequest, res: Response) => {
 
     dataFinal.push(dataItemFinal);
   }
-  console.log("Danh sách CV: ", dataFinal);
-  console.log("Tổng số trang: ", totalPage);
-  res.json({
+  
+  const responseData = {
     code: "success",
     message: "Lấy danh sách CV thành công!",
     listCV: dataFinal,
     totalPage,
     totalRecord: totalItems,
+  };
+
+  // Cache for 2 minutes (company data changes frequently)
+  await redisClient.set(redisKey, JSON.stringify(responseData), {
+    EX: 120
   });
+
+  res.json(responseData);
 };
 
 export const detailCV = async (req: AccountRequest, res: Response) => {

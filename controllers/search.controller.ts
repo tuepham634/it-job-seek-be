@@ -2,9 +2,21 @@ import { Request, Response } from "express";
 import Job from "../models/job.model";
 import AccountCompany from "../models/account-company.model";
 import City from "../models/city.model";
+import { redisClient } from "../helpers/redis";
 
 export const search = async (req: Request, res: Response) => {
   try {
+    // Create cache key from query parameters
+    const queryParams = new URLSearchParams(req.query as any).toString();
+    const redisKey = `search:${queryParams}`;
+
+    // Check cache
+    const cachedData = await redisClient.get(redisKey);
+    if (cachedData) {
+      res.json(JSON.parse(cachedData));
+      return;
+    }
+
     const dataFinal: any[] = [];
     let totalPage = 0;
     let totalRecord = 0;
@@ -123,7 +135,7 @@ export const search = async (req: Request, res: Response) => {
     }
 
     //  Trả kết quả về frontend
-    res.json({
+    const responseData = {
       code: "success",
       message: "Thành công!",
       jobs: dataFinal,
@@ -131,7 +143,14 @@ export const search = async (req: Request, res: Response) => {
       totalRecord: totalRecord,
       currentPage: page,
       limitItems: limitItems
+    };
+
+    // Cache for 3 minutes (search results change more frequently)
+    await redisClient.set(redisKey, JSON.stringify(responseData), {
+      EX: 180
     });
+
+    res.json(responseData);
 
   } catch (error: any) {
     console.error("Lỗi search job:", error);

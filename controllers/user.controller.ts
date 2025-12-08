@@ -6,6 +6,7 @@ import { AccountRequest } from "../interfaces/request.interface";
 import Job from "../models/job.model";
 import AccountCompany from "../models/account-company.model";
 import CV from "../models/cv.model";
+import { redisClient } from "../helpers/redis";
 
 export const registerPost = async (req: Request, res: Response) => {
   console.log(req.body);
@@ -110,6 +111,8 @@ export const profilePatch = async(req: AccountRequest, res: Response) => {
 
 export const listCV = async (req: AccountRequest, res: Response) => {
   const userEmail = req.account.email;
+  const userId = req.account.id;
+  
   //Phân trang
   const LimitItems = 6;
   let page = 1
@@ -119,6 +122,16 @@ export const listCV = async (req: AccountRequest, res: Response) => {
       page = currentPage;
     }
   }
+
+  const redisKey = `user:${userId}:cv:list:${page}`;
+  
+  // Check cache
+  const cachedData = await redisClient.get(redisKey);
+  if (cachedData) {
+    res.json(JSON.parse(cachedData));
+    return;
+  }
+
   const totalItems = await CV.countDocuments({ email: userEmail });
   const totalPage = Math.ceil(totalItems / LimitItems);
   if (page > totalPage && totalPage != 0) {
@@ -180,12 +193,19 @@ export const listCV = async (req: AccountRequest, res: Response) => {
     }
   }
 
-  res.json({
+  const responseData = {
     code: "success",
     message: "Lấy danh sách CV thành công!",
     listCV: dataFinal,
     totalPage: totalPage
-  })
+  };
+
+  // Cache for 2 minutes (user data changes more frequently)
+  await redisClient.set(redisKey, JSON.stringify(responseData), {
+    EX: 120
+  });
+
+  res.json(responseData);
 }
 export const deleteCVDel = async (req: AccountRequest, res: Response) => {
   try {

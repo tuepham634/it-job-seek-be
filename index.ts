@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { connectDB } from "./config/database";
+import { connectRedis } from "./helpers/redis";
 import dotenv from "dotenv";
 import routers from "./routes/index.route";
 import cookieParser = require("cookie-parser");
@@ -11,7 +12,9 @@ const app = express();
 const port = 4000;
 
 //kết nối db
+//kết nối db
 connectDB();
+connectRedis();
 //Cấu hình CORS
 app.set("trust proxy", 1);
 app.use(cors({

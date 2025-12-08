@@ -19,7 +19,8 @@
     "mogoose": "^0.0.1-security",
     "mongoose": "^8.17.1",
     "multer": "^2.0.2",
-    "multer-storage-cloudinary": "^4.0.0"
+    "multer-storage-cloudinary": "^4.0.0",
+    "redis": "^5.10.0"
   },
   "scripts": {
     "build": "tsc",
