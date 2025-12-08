@@ -18,10 +18,24 @@ connectRedis();
 //Cấu hình CORS
 app.set("trust proxy", 1);
 app.use(cors({
-  origin: [
-      "http://localhost:3000", // URL của frontend
+  origin: function (origin, callback) {
+    // Cho phép requests không có origin (như Postman, mobile apps)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      "http://localhost:3000",
       "https://it-job-seek.vercel.app"
-  ],
+    ];
+    
+    // Cho phép tất cả Vercel preview deployments
+    const isVercelPreview = origin.match(/https:\/\/.*\.vercel\.app$/);
+    
+    if (allowedOrigins.includes(origin) || isVercelPreview) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE","OPTIONS"], // Các phương thức HTTP được phép
   allowedHeaders: ["Content-Type", "Authorization"], // Các header được phép
   credentials: true // Cho phép gửi cookie qua lại giưa be và fe
