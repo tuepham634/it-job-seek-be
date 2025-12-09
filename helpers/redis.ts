@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import { Redis } from "@upstash/redis";
 
 // Upstash REST client - works better on serverless/Render

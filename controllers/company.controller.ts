@@ -83,9 +83,9 @@ export const loginPost = async (req: Request, res: Response) => {
   res.cookie("token", token, {
     maxAge: 24 * 60 * 60 * 1000, // Token có hiệu lực trong 1 ngày
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production" ? true : false, // false: http, true: https
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cho phép gửi cookie giữa các domain
-     path: "/",
+    secure: process.env.NODE_ENV === "production" || process.env.RENDER ? true : false, // false: http, true: https
+    sameSite: process.env.NODE_ENV === "production" || process.env.RENDER ? "none" : "lax", // Cho phép gửi cookie giữa các domain
+    path: "/",
   })
 
   res.json({
@@ -139,6 +139,8 @@ export const jobCreatePost = async (req: AccountRequest, res: Response) => {
 
 
 export const jobList = async (req: AccountRequest, res: Response) => {
+
+  console.log("chạy vào đây:");
   const find: any = {
     companyId: req.account._id
   }
@@ -194,6 +196,7 @@ export const jobList = async (req: AccountRequest, res: Response) => {
     })
 
   }
+  console.log("Danh sách công việc",dataFinal);
   res.json({
     code: "success",
     jobs: dataFinal,

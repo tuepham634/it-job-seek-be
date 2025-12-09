@@ -1,20 +1,22 @@
 import express from "express";
-import cors from "cors";
-import { connectDB } from "./config/database";
-import { connectRedis } from "./helpers/redis";
+
 import dotenv from "dotenv";
 import routers from "./routes/index.route";
 import cookieParser = require("cookie-parser");
-
+import cors from "cors";
+import { connectDB } from "./config/database";
+import { connectRedis } from "./helpers/redis";
 //load biến môi trường
 dotenv.config();
 const app = express();
-const port = 4000;
-
-//kết nối db
+const port = process.env.PORT || 4000;
 //kết nối db
 connectDB();
 connectRedis();
+
+console.log("Redis URL:", process.env.UPSTASH_REDIS_REST_URL);
+console.log("Redis TOKEN:", process.env.UPSTASH_REDIS_REST_TOKEN);
+
 //Cấu hình CORS
 app.set("trust proxy", 1);
 app.use(cors({
