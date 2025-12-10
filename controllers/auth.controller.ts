@@ -73,8 +73,8 @@ export const check = async (req: Request, res: Response) => {
     if(!existAccountUser && !existAccountCompany) {
       res.clearCookie("token", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production" ? true : false, // false: http, true: https
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cho phép gửi cookie giữa các domain
+        secure: process.env.NODE_ENV === "production" || Boolean(process.env.RENDER) ? true : false,
+        sameSite: process.env.NODE_ENV === "production" || Boolean(process.env.RENDER) ? "none" : "lax",
         path: "/",
       });
       res.json({
@@ -85,8 +85,8 @@ export const check = async (req: Request, res: Response) => {
   } catch (error) {
     res.clearCookie("token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production" ? true : false, // false: http, true: https
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cho phép gửi cookie giữa các domain
+      secure: process.env.NODE_ENV === "production" || Boolean(process.env.RENDER) ? true : false,
+      sameSite: process.env.NODE_ENV === "production" || Boolean(process.env.RENDER) ? "none" : "lax",
       path: "/",
     });
     res.json({
@@ -100,11 +100,12 @@ export const check = async (req: Request, res: Response) => {
 // Logout
 
 export const logout = async (req: Request, res: Response) => {
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production" ? true : false, // false: http, true: https
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax" // Cho phép gửi cookie giữa các domain
-    });
+      res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production" || Boolean(process.env.RENDER) ? true : false,
+        sameSite: process.env.NODE_ENV === "production" || Boolean(process.env.RENDER) ? "none" : "lax",
+        path: "/",
+      });
   res.json({
     code: "success",
     message: "Đã Đăng xuất!"
