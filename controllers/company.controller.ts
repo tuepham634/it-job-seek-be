@@ -80,11 +80,14 @@ export const loginPost = async (req: Request, res: Response) => {
   )
 
   // Lưu token vào cookie
+  // Determine if running on HTTPS (Production/Render) or HTTP (Local)
+  const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+
   res.cookie("token", token, {
-    maxAge: 24 * 60 * 60 * 1000, // Token có hiệu lực trong 1 ngày
+    maxAge: 24 * 60 * 60 * 1000, 
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production" || process.env.RENDER ? true : false, // false: http, true: https
-    sameSite: process.env.NODE_ENV === "production" || process.env.RENDER ? "none" : "lax", // Cho phép gửi cookie giữa các domain
+    secure: isSecure, 
+    sameSite: isSecure ? "none" : "lax", 
     path: "/",
   })
 

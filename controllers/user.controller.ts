@@ -76,11 +76,12 @@ export const loginPost = async (req: Request, res: Response) => {
     }
   );
   // lưu token vào  cookie
+  const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
   res.cookie("token", token, {
     httpOnly: true, 
-    secure: process.env.NODE_ENV === "production" || process.env.RENDER ? true : false,
-    maxAge: 24 * 60 * 60 * 1000, // 1 ngày
-    sameSite: process.env.NODE_ENV === "production" || process.env.RENDER ? "none" : "lax", // Cho phép gửi cookie giữa các domain
+    secure: isSecure,
+    maxAge: 24 * 60 * 60 * 1000, 
+    sameSite: isSecure ? "none" : "lax", 
     path: "/",
   });
 

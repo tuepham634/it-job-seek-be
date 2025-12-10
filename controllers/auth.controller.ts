@@ -7,6 +7,12 @@ export const check = async (req: Request, res: Response) => {
   try {
     const token = req.cookies.token;
 
+    console.log("=== CHECK AUTH DEBUG ===");
+    console.log("Cookies:", req.cookies);
+    console.log("Token:", token);
+    console.log("NODE_ENV:", process.env.NODE_ENV);
+    console.log("RENDER:", process.env.RENDER);
+    
     if(!token) {
       res.json({
         code: "error",
@@ -71,10 +77,11 @@ export const check = async (req: Request, res: Response) => {
     }
     // Không tìm thấy user hay company
     if(!existAccountUser && !existAccountCompany) {
+      const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
       res.clearCookie("token", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production" || Boolean(process.env.RENDER) ? true : false,
-        sameSite: process.env.NODE_ENV === "production" || Boolean(process.env.RENDER) ? "none" : "lax",
+        secure: isSecure,
+        sameSite: isSecure ? "none" : "lax",
         path: "/",
       });
       res.json({
@@ -83,10 +90,13 @@ export const check = async (req: Request, res: Response) => {
       });
     }
   } catch (error) {
+    console.log("=== AUTH ERROR DEBUG ===");
+    console.log(error);
+    const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
     res.clearCookie("token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production" || Boolean(process.env.RENDER) ? true : false,
-      sameSite: process.env.NODE_ENV === "production" || Boolean(process.env.RENDER) ? "none" : "lax",
+      secure: isSecure,
+      sameSite: isSecure ? "none" : "lax",
       path: "/",
     });
     res.json({
@@ -100,12 +110,14 @@ export const check = async (req: Request, res: Response) => {
 // Logout
 
 export const logout = async (req: Request, res: Response) => {
+      const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
       res.clearCookie("token", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production" || Boolean(process.env.RENDER) ? true : false,
-        sameSite: process.env.NODE_ENV === "production" || Boolean(process.env.RENDER) ? "none" : "lax",
+        secure: isSecure,
+        sameSite: isSecure ? "none" : "lax",
         path: "/",
       });
+
   res.json({
     code: "success",
     message: "Đã Đăng xuất!"
